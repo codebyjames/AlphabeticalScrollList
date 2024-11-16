@@ -5,6 +5,9 @@ Alphabetical Indexed Scroll List
 [Screen_recording_20241116_170658.webm](https://github.com/user-attachments/assets/3e228e39-cb15-4a11-a4ef-9c5563fb37e8)
 
 Features
-Scroll Char Index List on the right to scroll the Main Item List on the left.
-Click a char in the Char Index List on the right to scroll the Main Item List on the left.
-Scroll the Main Item List on the left, which in turn will scale the correct char on the Char Index List
+- Char Header for grouped items
+- Scroll Char Index List on the right to scroll the Main Item List on the left.
+- Click a char in the Char Index List on the right to scroll the Main Item List on the left.
+- Scroll the Main Item List on the left, which in turn will scale the correct char on the Char Index List
+
+Medium Article: https://medium.com/@Bigboyinfo/alphabetical-indexed-scroll-list-jetpack-compose-41db1cfe99ce
