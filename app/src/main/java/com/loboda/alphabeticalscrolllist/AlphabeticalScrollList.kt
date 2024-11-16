@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +50,21 @@ fun AlphabeticScrollList(items: List<String>,
     val scrollState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val totalSizeChar = indexCharInfo.size + indexCharInfo.padding
+    val firstVisibleIndex by remember {
+        derivedStateOf { scrollState.firstVisibleItemIndex }
+    }
+
+    LaunchedEffect(firstVisibleIndex) {
+        val visibleIndex = scrollState.firstVisibleItemIndex
+        val visibleGroup = groupedItems.entries
+            .take(visibleIndex + 1)  // Get the group of the first visible item
+            .lastOrNull()
+            ?.key
+
+        if (visibleGroup != null) {
+            selectedChar = visibleGroup
+        }
+    }
 
     val processSelectedChar = {
         selectedChar?.let { char ->
