@@ -7,11 +7,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ripple.rememberRipple
@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 /**
@@ -37,6 +36,8 @@ import kotlinx.coroutines.launch
  * www.papayev.com
  */
 
+private val ALPHABET = ('A'..'Z').toList()
+
 @Composable
 fun AlphabeticScrollList(items: List<String>,
                          headerContent: @Composable (Char) -> Unit = { DefaultAlphabeticalScrollList.HeaderContent(it) },
@@ -44,11 +45,9 @@ fun AlphabeticScrollList(items: List<String>,
                          indexCharInfo: IndexCharInfo = IndexCharInfo { DefaultAlphabeticalScrollList.IndexCharContent(it) }
 ) {
     val groupedItems = remember { items.sorted().groupBy { it.first().uppercaseChar() } }
-    val alphabet = ('A'..'Z').toList()
     var selectedChar by remember { mutableStateOf<Char?>(null) }
     val scrollState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    val totalSizeChar = indexCharInfo.size + indexCharInfo.padding
     val firstVisibleIndex by remember {
         derivedStateOf { scrollState.firstVisibleItemIndex }
     }
@@ -58,25 +57,26 @@ fun AlphabeticScrollList(items: List<String>,
         determineVisibleGroupKey(firstVisibleIndex, groupedItems)?.let { selectedChar = it }
     }
 
-    // Scroll to the selected group when selectedChar changes
-    val onSelectedChar = {
-        selectedChar?.let { char ->
-            // Calculate the target index by summing the number of headers and items before the target group
-            val targetIndex = groupedItems.entries
-                .takeWhile { it.key != char }
-                .sumOf { 1 + it.value.size }
-            if (groupedItems.keys.contains(char)) {
-                scope.launch {
-                    scrollState.scrollToItem(targetIndex)
-                }
-            }
+    val onSelectedChar: (Char) -> Unit = { char ->
+        // Update the selectedChar state
+        selectedChar = char
+
+        // Calculate the target index by summing the number of headers and items before the target group
+        val targetIndex = groupedItems.entries
+            .takeWhile { it.key != char }
+            .sumOf { 1 + it.value.size }
+
+        // Scroll to the selected group
+        if (groupedItems.keys.contains(char)) {
+            scope.launch { scrollState.scrollToItem(targetIndex) }
         }
     }
 
     Row(Modifier.fillMaxSize(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
-        // Main List
+
+        // List of items: Header + Items
         LazyColumn(
             modifier = Modifier.weight(0.9f),
             state = scrollState
@@ -89,40 +89,50 @@ fun AlphabeticScrollList(items: List<String>,
             }
         }
 
-        // Alphabet Index
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(0.1f)
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures { change, _ ->
-                        val index = (change.position.y / (totalSizeChar.toPx()))
-                            .toInt()
-                            .coerceIn(0, alphabet.size - 1)
-                        selectedChar = alphabet[index]
-                        onSelectedChar()
-                    }
-                },
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            alphabet.forEach { char ->
-                Box (modifier = Modifier
-                    .size(indexCharInfo.size)
-                    .padding(indexCharInfo.padding)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(bounded = false)
-                    ) {
-                        selectedChar = char
-                        onSelectedChar()
-                    }
-                    .graphicsLayer {
-                        scaleX = if (char == selectedChar) 1.5f else 1f
-                        scaleY = if (char == selectedChar) 1.5f else 1f
-                    }) {
-                    indexCharInfo.content(char)
+        // vertical bar with alphabet
+        AlphabetVerticalBar(indexCharInfo, selectedChar, onSelectedChar)
+    }
+}
+
+@Composable
+private fun RowScope.AlphabetVerticalBar(
+    indexCharInfo: IndexCharInfo,
+    selectedChar: Char?,
+    onSelectedChar: (Char) -> Unit,
+) {
+
+    val totalSizeChar = indexCharInfo.size + indexCharInfo.padding
+
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .weight(0.1f)
+            .pointerInput(Unit) {
+                detectVerticalDragGestures { change, _ ->
+                    val index = (change.position.y / (totalSizeChar.toPx()))
+                        .toInt()
+                        .coerceIn(0, ALPHABET.size - 1)
+                    onSelectedChar(ALPHABET[index])
                 }
+            },
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        ALPHABET.forEach { char ->
+            Box (modifier = Modifier
+                .size(indexCharInfo.size)
+                .padding(indexCharInfo.padding)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(bounded = false)
+                ) {
+                    onSelectedChar(char)
+                }
+                .graphicsLayer {
+                    scaleX = if (char == selectedChar) 1.5f else 1f
+                    scaleY = if (char == selectedChar) 1.5f else 1f
+                }) {
+                indexCharInfo.content(char)
             }
         }
     }
