@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 
 object DefaultAlphabeticalScrollList {
 
+    val DefaultCharInfo = IndexCharInfo(content = { IndexCharContent(it) })
+
     @Composable
     fun HeaderContent(initial: Char) {
         Text(
@@ -40,4 +42,5 @@ object DefaultAlphabeticalScrollList {
             modifier = Modifier.fillMaxSize(),
         )
     }
+
 }
