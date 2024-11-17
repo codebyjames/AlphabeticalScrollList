@@ -78,7 +78,7 @@ fun AlphabeticScrollList(items: List<String>,
         horizontalArrangement = Arrangement.Center) {
         // Main List
         LazyColumn(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(0.9f),
             state = scrollState
         ) {
             groupedItems.forEach { (initial, items) ->
@@ -93,7 +93,7 @@ fun AlphabeticScrollList(items: List<String>,
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .width(40.dp)
+                .weight(0.1f)
                 .pointerInput(Unit) {
                     detectVerticalDragGestures { change, _ ->
                         val index = (change.position.y / (totalSizeChar.toPx()))
