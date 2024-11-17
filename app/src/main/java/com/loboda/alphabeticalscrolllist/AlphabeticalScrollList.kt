@@ -39,12 +39,11 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun AlphabeticScrollList(items: List<String>,
-                         headerUi: @Composable (Char) -> Unit,
-                         itemUi: @Composable (String) -> Unit,
-                         indexCharInfo: IndexCharInfo) {
-    val groupedItems = remember {
-        items.groupBy { it.first().uppercaseChar() }
-    }
+                         headerContent: @Composable (Char) -> Unit = { DefaultAlphabeticalScrollList.HeaderContent(it) },
+                         itemContent: @Composable (String) -> Unit = { DefaultAlphabeticalScrollList.ItemContent(it) },
+                         indexCharInfo: IndexCharInfo = IndexCharInfo { DefaultAlphabeticalScrollList.IndexCharContent(it) }
+) {
+    val groupedItems = remember { items.sorted().groupBy { it.first().uppercaseChar() } }
     val alphabet = ('A'..'Z').toList()
     var selectedChar by remember { mutableStateOf<Char?>(null) }
     val scrollState = rememberLazyListState()
@@ -54,19 +53,13 @@ fun AlphabeticScrollList(items: List<String>,
         derivedStateOf { scrollState.firstVisibleItemIndex }
     }
 
+    // Update selectedChar when the first visible index changes
     LaunchedEffect(firstVisibleIndex) {
-        val visibleIndex = scrollState.firstVisibleItemIndex
-        val visibleGroup = groupedItems.entries
-            .take(visibleIndex + 1)  // Get the group of the first visible item
-            .lastOrNull()
-            ?.key
-
-        if (visibleGroup != null) {
-            selectedChar = visibleGroup
-        }
+        determineVisibleGroupKey(firstVisibleIndex, groupedItems)?.let { selectedChar = it }
     }
 
-    val processSelectedChar = {
+    // Scroll to the selected group when selectedChar changes
+    val onSelectedChar = {
         selectedChar?.let { char ->
             // Calculate the target index by summing the number of headers and items before the target group
             val targetIndex = groupedItems.entries
@@ -89,9 +82,9 @@ fun AlphabeticScrollList(items: List<String>,
             state = scrollState
         ) {
             groupedItems.forEach { (initial, items) ->
-                item { headerUi(initial) }
+                item { headerContent(initial) }
                 items.forEach { listItem ->
-                    item { itemUi(listItem) }
+                    item { itemContent(listItem) }
                 }
             }
         }
@@ -107,7 +100,7 @@ fun AlphabeticScrollList(items: List<String>,
                             .toInt()
                             .coerceIn(0, alphabet.size - 1)
                         selectedChar = alphabet[index]
-                        processSelectedChar()
+                        onSelectedChar()
                     }
                 },
             verticalArrangement = Arrangement.Center,
@@ -115,14 +108,14 @@ fun AlphabeticScrollList(items: List<String>,
         ) {
             alphabet.forEach { char ->
                 Box (modifier = Modifier
-                    .size(totalSizeChar)
+                    .size(indexCharInfo.size)
                     .padding(indexCharInfo.padding)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = rememberRipple(bounded = false)
                     ) {
                         selectedChar = char
-                        processSelectedChar()
+                        onSelectedChar()
                     }
                     .graphicsLayer {
                         scaleX = if (char == selectedChar) 1.5f else 1f
@@ -135,22 +128,32 @@ fun AlphabeticScrollList(items: List<String>,
     }
 }
 
+/**
+ * Determines the visible group key based on the provided first visible index.
+ * It calculates the group that the visible index belongs to by iterating over
+ * grouped items and maintaining a cumulative index.
+ *
+ * @param firstVisibleIndex The index of the first visible item in the list.
+ * @param groupedItems A map representing grouped items with their headers as keys.
+ * @return The key of the currently visible group, or null if no matching group is found.
+ */
+fun determineVisibleGroupKey(
+    firstVisibleIndex: Int,
+    groupedItems: Map<Char, List<Any>>
+): Char? {
+    var cumulativeIndex = 0
+    return groupedItems.entries.find { entry ->
+        val groupSize = 1 + entry.value.size  // 1 for the header + number of items
+        val withinGroup = firstVisibleIndex in cumulativeIndex until (cumulativeIndex + groupSize)
+        cumulativeIndex += groupSize  // Move to the next group's start index
+        withinGroup
+    }?.key
+}
+
+
 @Preview(showSystemUi = true)
 @Composable
-fun AlphabeticIndexedListPreview() {
-    AlphabeticScrollList(fakeListOfNames, headerUi = {
-        DefaultAlphabeticalScrollList.HeaderUi(it)
-    }, itemUi = {
-        DefaultAlphabeticalScrollList.ItemUi(it)
-    },
-        indexCharInfo = IndexCharInfo(
-            size = 20.dp,
-            padding = 2.dp,
-            content = {
-                DefaultAlphabeticalScrollList.IndexCharUi(it)
-            }
-        ))
-}
+fun AlphabeticIndexedListPreview() { AlphabeticScrollList(fakeListOfNames) }
 
 
 val fakeListOfNames = listOf(
