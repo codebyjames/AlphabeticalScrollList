@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
  * www.papayev.com
  */
 
-object DefaultAlphabeticalScrollList {
+object DefaultsAlphabeticalScrollList {
 
     val DefaultCharInfo = IndexCharInfo(content = { IndexCharContent(it) })
 

@@ -21,15 +21,15 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                         AlphabeticScrollList(fakeListOfNames, headerContent = {
-                            DefaultAlphabeticalScrollList.HeaderContent(it)
+                            DefaultsAlphabeticalScrollList.HeaderContent(it)
                         }, itemContent = {
-                            DefaultAlphabeticalScrollList.ItemContent(it)
+                            DefaultsAlphabeticalScrollList.ItemContent(it)
                         },
                             indexCharInfo = IndexCharInfo(
                                 size = 20.dp,
                                 padding = 2.dp,
                                 content = {
-                                    DefaultAlphabeticalScrollList.IndexCharContent(it)
+                                    DefaultsAlphabeticalScrollList.IndexCharContent(it)
                                 }
                             ))
                     }

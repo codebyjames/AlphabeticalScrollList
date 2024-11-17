@@ -40,9 +40,9 @@ private val ALPHABET = ('A'..'Z').toList()
 
 @Composable
 fun AlphabeticScrollList(items: List<String>,
-                         headerContent: @Composable (Char) -> Unit = { DefaultAlphabeticalScrollList.HeaderContent(it) },
-                         itemContent: @Composable (String) -> Unit = { DefaultAlphabeticalScrollList.ItemContent(it) },
-                         indexCharInfo: IndexCharInfo =  DefaultAlphabeticalScrollList.DefaultCharInfo
+                         headerContent: @Composable (Char) -> Unit = { DefaultsAlphabeticalScrollList.HeaderContent(it) },
+                         itemContent: @Composable (String) -> Unit = { DefaultsAlphabeticalScrollList.ItemContent(it) },
+                         indexCharInfo: IndexCharInfo =  DefaultsAlphabeticalScrollList.DefaultCharInfo
 ) {
     val groupedItems = remember { items.sorted().groupBy { it.first().uppercaseChar() } }
     var selectedChar by remember { mutableStateOf<Char?>(null) }
